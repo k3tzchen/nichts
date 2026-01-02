@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-issue-forms.json
+name: Bug Report
+description: I would like to report an issue I have encountered.
+labels: ["bug"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Before opening a new issue, take a moment to validate its a unique (new) issue.
+      description: 'If you find a similar issue, please put your attention there.'
+      options:
+        - label: This issue has not been previously reported.
+          required: true
+
+  - type: textarea
+    id: systeminfo
+    attributes:
+      label: System Information
+      description: anything goes. the more (useful information) the better
+      render: sh
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: Please provide a detailed description of the issue and explain what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Please outline the steps to reproduce the issue.
+      placeholder: |
+        1. buy wireless mouse
+        2. look inside
+        3. wires
+
+    validations:
+      required: true

@@ -1,0 +1,19 @@
+*
+
+# @github
+!.github/
+!.github/**
+
+# @basics
+!LICENSE
+!.gitignore
+!Cargo.lock
+!Cargo.toml
+
+# @nix
+!flake.nix
+!flake.lock
+
+# @entry
+!src/
+!src/**
