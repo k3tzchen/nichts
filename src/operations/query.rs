@@ -50,6 +50,10 @@ impl Operation for Query {
         }
       }
 
+      if !package.is_empty() {
+        packages.push(package.clone());
+      }
+
       if packages.is_empty() {
         return Err((1, "no package(s) found"));
       }
