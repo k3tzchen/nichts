@@ -1,9 +1,9 @@
-use crate::{Operation, command::prepare_cmd, operations::Operations, options::Options, CLI_NAME, CLI_VERSION};
+use crate::{CLI_NAME, CLI_VERSION, Operation, command::prepare_cmd, error::Error, operations::Operations, options::Options};
 
 pub struct Version;
 
 impl Operation for Version {
-  fn operate(cli: &crate::Cli) -> Result<(), (i32, &str)> {
+  fn operate(cli: &crate::Cli) -> Result<(), Error> {
     if cli.help {
       Options::print_help(Operations::Version);
       return Ok(());

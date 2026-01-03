@@ -1,21 +1,28 @@
 use super::{Operation, Operations};
-use crate::{ command::exec_cmd, options::{Options, clean::Clean} };
+use crate::{ command::exec_cmd, error::Error, options::{Options, clean::Clean} };
 
 pub struct Remove;
 
 impl Operation for Remove {
-  fn operate(cli: &crate::Cli) -> Result<(), (i32, &str)> {
+  fn operate(cli: &crate::Cli) -> Result<(), Error> {
     if cli.help {
       Options::print_help(Operations::Remove);
       return Ok(());
     }
 
     if cli.packages.is_empty() {
-      return Err((1, "no target(s) specified"));
+      return Err(Error::NotSpecified { kind: "target(s)".to_string() });
     }
 
     let packages = &cli.packages;
-    if let Err(err) = exec_cmd(format!("nix profile remove -- {}", packages.join(" ")), false) {
+
+    let log_level = if cli.quiet {
+      "--quiet"
+    } else {
+      "--verbose"
+    };
+
+    if let Err(err) = exec_cmd(format!("nix profile remove {log_level} -- {}", packages.join(" ")), false) {
       return Err(err);
     }
 

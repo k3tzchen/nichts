@@ -1,6 +1,6 @@
 use std::{fmt::Display, process::exit};
 
-use crate::{ CLI_NAME, Cli };
+use crate::{ CLI_NAME, Cli, error::Error };
 
 pub enum Operations {
   Sync,
@@ -60,12 +60,13 @@ impl Operations {
     }
   }
 
-  pub fn assert(res: Result<(), (i32, &str)>) -> ! {
-    if let Err((code, message)) = res {
+  pub fn assert(res: Result<(), Error>) -> ! {
+    if let Err(err) = res {
+      let message = err.to_string();
       if !message.is_empty() {
         eprintln!("Error: {message}");
       }
-      exit(code);
+      exit(err.exit_code());
     }
 
     exit(0);
@@ -85,7 +86,7 @@ impl Display for Operations {
 }
 
 pub(super) trait Operation {
-  fn operate(cli: &Cli) -> Result<(), (i32, &str)>;
+  fn operate(cli: &Cli) -> Result<(), crate::error::Error>;
 }
 
 pub mod help;

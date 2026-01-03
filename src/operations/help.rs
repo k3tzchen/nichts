@@ -1,10 +1,10 @@
 use super::{Operation, Operations};
-use crate::{CLI_NAME, Cli, options::Options};
+use crate::{CLI_NAME, Cli, error::Error, options::Options};
 
 pub struct Help;
 
 impl Operation for Help {
-  fn operate(_cli: &Cli) -> Result<(), (i32, &str)> {
+  fn operate(_cli: &Cli) -> Result<(), Error> {
     println!("usage:  {CLI_NAME} <operation> [...]");
     println!("operations:");
     Operations::print_help();

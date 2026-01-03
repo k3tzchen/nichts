@@ -1,10 +1,10 @@
 use super::{Operation, Operations};
-use crate::{Cli, command::exec_cmd, options::{Options, clean::Clean}};
+use crate::{Cli, command::exec_cmd, error::Error, options::{Options, clean::Clean}};
 
 pub struct History;
 
 impl Operation for History {
-  fn operate(cli: &Cli) -> Result<(), (i32, &str)> {
+  fn operate(cli: &Cli) -> Result<(), Error> {
     if cli.help {
       Options::print_help(Operations::History);
       return Ok(());
@@ -12,7 +12,7 @@ impl Operation for History {
 
     if cli.packages.is_empty() {
       if cli.clean {
-        return Err((1, "no generation specified"));
+        return Err(Error::NotSpecified { kind: "generation".to_string() });
       }
 
       return exec_cmd("nix profile history", false);
@@ -30,6 +30,6 @@ impl Operation for History {
       return Ok(());
     }
 
-    return Err((1, "Failed to roll back"));
+    return Err(Error::FailedRollback);
   }
 }

@@ -1,5 +1,6 @@
 use clap::Parser;
 
+use crate::error::Error;
 use crate::operations::history::History;
 use crate::operations::{ Operation, Operations };
 use crate::operations::{
@@ -16,6 +17,7 @@ use crate::options::clean::Clean;
 mod operations;
 mod options;
 mod command;
+mod error;
 
 pub static CLI_NAME: &str = env!("CARGO_BIN_NAME");
 pub static CLI_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -64,6 +66,9 @@ struct Cli {
   #[arg(short = Options::Info.short(), long = Options::Info.long(), action = clap::ArgAction::SetTrue)]
   info: bool,
 
+  #[arg(short = Options::Quiet.short(), long = Options::Quiet.long(), action = clap::ArgAction::SetTrue)]
+  quiet: bool,
+
   packages: Vec<String>,
 }
 
@@ -84,11 +89,11 @@ fn main() {
       Operations::assert(Clean::operate(&cli));
     }
 
-    Operations::assert(Err((1, "no operation specified")));
+    Operations::assert(Err(Error::NotSpecified { kind: "operation".to_string() }));
   }
 
   if command_count > 1 {
-    Operations::assert(Err((1, "only one operation may be used at a time")));
+    Operations::assert(Err(Error::Unknown { code: 1, message: "only one operation may be used at a time".to_string() }));
   }
 
   Operations::assert(match () {

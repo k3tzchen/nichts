@@ -1,4 +1,4 @@
-use crate::{ Operation, command::{exec_cmd, prepare_cmd}, operations::Operations, options::Options };
+use crate::{ Operation, command::{exec_cmd, prepare_cmd}, error::Error, operations::Operations, options::Options };
 use fast_strip_ansi::strip_ansi_string;
 
 pub fn pattern_match(values: &mut Vec<String>, patterns: &Vec<String>) {
@@ -66,7 +66,7 @@ pub fn list_packages(with_info: bool) -> Vec<String> {
 pub struct Query;
 
 impl Operation for Query {
-  fn operate(cli: &crate::Cli) -> Result<(), (i32, &str)> {
+  fn operate(cli: &crate::Cli) -> Result<(), Error> {
     if cli.help {
       Options::print_help(Operations::Query);
       return Ok(());
@@ -82,14 +82,14 @@ impl Operation for Query {
 
     if cli.search {
       if cli.packages.is_empty() {
-        return Err((1, "no pattern(s) specified"));
+        return Err(Error::NotSpecified { kind: "pattern(s)".to_string() });
       }
 
       pattern_match(&mut packages, &cli.packages);
     }
 
     if packages.is_empty() {
-      return Err((1, "no package(s) found"));
+      return Err(Error::NoPackageFound);
     }
 
     println!("{}", packages.join("\n"));

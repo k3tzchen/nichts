@@ -9,15 +9,16 @@ pub enum Options {
   Info,
   Impure,
   Refresh,
-  Clean
+  Clean,
+  Quiet
 }
 
 impl Options {
   fn partial(operation: &Operations) -> &'static [Options] {
     match operation {
       Operations::Query => &[Options::Info, Options::Search],
-      Operations::Remove | Operations::History => &[Options::Clean],
-      Operations::Sync => &[Options::Clean, Options::Flake, Options::Impure, Options::Refresh, Options::Search, Options::Upgrade],
+      Operations::Remove | Operations::History => &[Options::Clean, Options::Quiet],
+      Operations::Sync => &[Options::Clean, Options::Flake, Options::Impure, Options::Refresh, Options::Search, Options::Upgrade, Options::Quiet],
       _ => &[]
     }
   }
@@ -43,6 +44,7 @@ impl Options {
       Options::Search => 's',
       Options::Upgrade => 'u',
       Options::Info => 'i',
+      Options::Quiet => 'q',
       _ => ' '
     }
   }
@@ -55,7 +57,8 @@ impl Options {
       Options::Info => "info",
       Options::Impure => "impure",
       Options::Refresh => "refresh",
-      Options::Clean => "clean"
+      Options::Clean => "clean",
+      Options::Quiet => "quiet"
     }
   }
 
