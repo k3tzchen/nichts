@@ -1,4 +1,4 @@
-use crate::{Operation, command::{exec_cmd, prepare_cmd}, options::clean::Clean};
+use crate::{Operation, command::exec_cmd, operations::query::list_packages, options::clean::Clean};
 
 pub struct Upgrade;
 
@@ -16,24 +16,11 @@ impl Operation for Upgrade {
     }
 
     if packages.is_empty() {
-      let output = prepare_cmd(vec!["sh", "-c"], true)
-        .arg("nix profile list | grep Name | awk '{print $NF}'")
-        .output()
-        .expect("Failed to list packages");
-
-      let output = String::from_utf8_lossy(&output.stdout);
-
-
-      let output = output
-        .replace("\u{1b}[1m", "")
-        .replace("\u{1b}[0m", "")
-        .trim()
-        .to_string();
-
-      packages = output
-        .lines()
-        .collect::<Vec<&str>>()
-        .join(" ");
+      let installed_packages = list_packages(false);
+      if installed_packages.is_empty() {
+        return Err((1, "no package(s) to upgrade"));
+      }
+      packages = installed_packages.join(" ");
     }
 
     if let Err(err) = exec_cmd(format!("{command} -- {packages}"), false) {

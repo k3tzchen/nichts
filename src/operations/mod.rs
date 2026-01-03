@@ -1,4 +1,4 @@
-use std::process::exit;
+use std::{fmt::Display, process::exit};
 
 use crate::{ CLI_NAME, Cli };
 
@@ -25,7 +25,7 @@ impl Operations {
 
   fn print_help() {
     for operation in Operations::all() {
-      println!("  {CLI_NAME} {}", operation.to_string());
+      println!("  {CLI_NAME} {operation}");
     }
   }
 
@@ -72,9 +72,15 @@ impl Operations {
   }
 }
 
-impl ToString for Operations {
-  fn to_string(&self) -> String {
-    format!("{{-{short} --{long}}} {arguments}", short = self.short(), long = self.long(), arguments = self.arguments())
+impl Display for Operations {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let arguments = self.arguments();
+
+    if arguments.is_empty() {
+      return write!(f, "{{-{short} --{long}}}", short = self.short(), long = self.long());
+    }
+
+    write!(f, "{{-{short} --{long}}} {arguments}", short = self.short(), long = self.long())
   }
 }
 

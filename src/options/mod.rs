@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{CLI_NAME, operations::Operations};
 
 pub enum Options {
@@ -21,7 +23,7 @@ impl Options {
   }
 
   pub fn print_help(operation: Operations) {
-    println!("usage: {CLI_NAME} {}", operation.to_string());
+    println!("usage: {CLI_NAME} {operation}");
 
     let options = Options::partial(&operation);
     if options.is_empty() {
@@ -29,8 +31,8 @@ impl Options {
     }
 
     println!("\noptions:");
-    for operation in options {
-      println!("  {}", operation.to_string());
+    for option in options {
+      println!("  {option}");
     }
   }
 
@@ -66,12 +68,23 @@ impl Options {
   }
 }
 
-impl ToString for Options {
-  fn to_string(&self) -> String {
-    let short = self.short();
-    let argument = format!("-{short}");
+impl Display for Options {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let arguments = self.arguments();
+    let short_char = self.short();
 
-    format!("{short} --{long} {arguments}", short = if short.eq(&' ') { "  " } else { argument.as_str()  },  long = self.long(), arguments = self.arguments())
+    let mut short = "  ";
+    let option = format!("-{short_char}");
+
+    if !short_char.eq(&' '){
+      short = option.as_str();
+    };
+
+    if arguments.is_empty() {
+      return write!(f, "{short} --{long}", long = self.long());
+    }
+
+    write!(f, "{short} --{long} {arguments}", long = self.long())
   }
 }
 

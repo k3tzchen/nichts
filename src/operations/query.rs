@@ -1,20 +1,66 @@
 use crate::{ Operation, command::{exec_cmd, prepare_cmd}, operations::Operations, options::Options };
+use fast_strip_ansi::strip_ansi_string;
 
-fn strip_ansi(str: impl Into<String>) -> String {
-  let str = str.into();
-  let str = str.as_str()
-    .replace("\u{1b}[1m", "")
-    .replace("\u{1b}[0m", "")
-    .trim()
-    .to_string();
+pub fn pattern_match(values: &mut Vec<String>, patterns: &Vec<String>) {
+  values.retain(|pkg| {
+    let name = pkg.lines()
+      .find(|line| line.starts_with("Name:"))
+      .and_then(|line| line.split_whitespace().last())
+      .unwrap_or("");
 
-  str
+    if name.is_empty() {
+      return patterns.iter().any(|pattern| pkg.contains(pattern));
+    }
+
+    let flake_attr = pkg.lines()
+      .find(|line| line.starts_with("Flake attribute:"))
+      .and_then(|line| line.split_whitespace().last())
+      .unwrap_or("");
+
+    if flake_attr.is_empty() {
+      return false;
+    }
+
+    patterns.iter().any(|pattern| {
+      name.contains(pattern) || flake_attr.contains(pattern)
+    })
+  });
 }
 
-fn pattern_match(values: &mut Vec<String>, patterns: &Vec<String>) {
-  for pattern in patterns {
-    values.retain(|pkg| pkg.contains(pattern));
+pub fn list_packages(with_info: bool) -> Vec<String> {
+  let list = prepare_cmd(vec!["nix", "profile", "list"], true)
+    .output()
+    .expect("Failed to list packages");
+
+  let output = String::from_utf8_lossy(&list.stdout).to_string();
+
+  let mut packages = Vec::new();
+  let mut package = String::new();
+
+  for line in output.lines() {
+    if with_info {
+      if line.is_empty() {
+        packages.push(package.clone());
+        package.clear();
+      } else {
+        package.push_str(line);
+        package.push('\n');
+      }
+    } else {
+      if line.contains("Name") {
+        if let Some(last_field) = line.split_whitespace().last() {
+          let last_field = strip_ansi_string(last_field).to_string();
+          packages.push(last_field);
+        }
+      }
+    }
   }
+
+  if with_info && !package.is_empty() {
+    packages.push(package.clone());
+  }
+
+  packages
 }
 
 pub struct Query;
@@ -30,75 +76,23 @@ impl Operation for Query {
       if !cli.search || cli.packages.is_empty() {
         return exec_cmd("nix profile list", false);
       }
-
-      let list = prepare_cmd(vec!["nix", "profile", "list"], true)
-        .output()
-        .expect("Failed to list packages");
-
-      let list = String::from_utf8_lossy(&list.stdout).to_string();
-
-      let mut packages = Vec::new();
-      let mut package = String::new();
-
-      for line in list.lines() {
-        if line.is_empty() {
-          packages.push(package.clone());
-          package.clear();
-        } else {
-          package.push_str(line);
-          package.push('\n');
-        }
-      }
-
-      if !package.is_empty() {
-        packages.push(package.clone());
-      }
-
-      if packages.is_empty() {
-        return Err((1, "no package(s) found"));
-      }
-
-      if cli.search {
-        pattern_match(&mut packages, &cli.packages);
-      }
-
-      print!("{}", packages.join("\n"));
-
-      return Ok(());
     }
 
-    let list = prepare_cmd(vec!["nix", "profile", "list"], true)
-      .output()
-      .expect("Failed to list packages");
-
-    let mut list = String::from_utf8_lossy(&list.stdout).to_string();
-
-    let mut package_names = Vec::new();
-
-    for line in list.lines() {
-      if line.contains("Name") {
-        if let Some(last_field) = line.split_whitespace().last() {
-          let last_field = strip_ansi(last_field);
-          package_names.push(last_field);
-        }
-      }
-    }
+    let mut packages = list_packages(cli.info);
 
     if cli.search {
       if cli.packages.is_empty() {
         return Err((1, "no pattern(s) specified"));
       }
 
-      pattern_match(&mut package_names, &cli.packages);
+      pattern_match(&mut packages, &cli.packages);
     }
 
-    if package_names.is_empty() {
+    if packages.is_empty() {
       return Err((1, "no package(s) found"));
     }
 
-    list = package_names.join("\n");
-
-    println!("{list}");
+    println!("{}", packages.join("\n"));
 
     return Ok(());
   }
