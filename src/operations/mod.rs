@@ -60,16 +60,36 @@ impl Operations {
     }
   }
 
-  pub fn assert(res: Result<(), Error>) -> ! {
+  pub fn throw_if_needed(res: Result<(), Error>) -> ! {
     if let Err(err) = res {
       let message = err.to_string();
       if !message.is_empty() {
-        eprintln!("Error: {message}");
+        eprintln!("error: {message}");
       }
       exit(err.exit_code());
     }
 
     exit(0);
+  }
+
+  fn len(&self) -> usize {
+    format!("{{-{short} --{long}}}", short = self.short(), long = self.long()).len()
+  }
+
+  fn max_len() -> usize {
+    Operations::all()
+      .iter().map(|operation| operation.len())
+      .max().unwrap_or_else(|| 0)
+  }
+
+  pub fn usage(&self) -> String {
+    let arguments = self.arguments();
+
+    if arguments.is_empty() {
+      return format!("{{-{short} --{long}}}", short = self.short(), long = self.long());
+    }
+
+    format!("{{-{short} --{long}}} {arguments}", short = self.short(), long = self.long())
   }
 }
 
@@ -81,7 +101,8 @@ impl Display for Operations {
       return write!(f, "{{-{short} --{long}}}", short = self.short(), long = self.long());
     }
 
-    write!(f, "{{-{short} --{long}}} {arguments}", short = self.short(), long = self.long())
+    let padding = Self::max_len() - self.len();
+    write!(f, "{{-{short} --{long}}}{padding} {arguments}", short = self.short(), long = self.long(), padding = " ".repeat(padding))
   }
 }
 

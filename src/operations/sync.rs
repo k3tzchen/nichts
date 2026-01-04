@@ -1,4 +1,4 @@
-use crate::{Operation, command::exec_cmd, error::Error, operations::Operations, options::{Options, clean::Clean, search::Search, upgrade::Upgrade} };
+use crate::{Operation, command::execute_command, error::Error, operations::Operations, options::{Options, clean::Clean, search::Search, upgrade::Upgrade} };
 
 pub struct Sync;
 
@@ -29,7 +29,15 @@ impl Operation for Sync {
       "--verbose"
     };
 
-    let mut command = format!("nix profile add {log_level}");
+    let profile = cli.profile.clone().map(|profile| {
+      if !profile.is_empty() {
+        return format!("--profile {profile}");
+      }
+
+      return profile;
+    }).unwrap_or_else(|| "".to_string());
+
+    let mut command = format!("nix profile add {profile} {log_level}");
 
     let package_prefix =
       if cli.flake.is_some() { format!("{}#", cli.flake.clone().unwrap()) }
@@ -44,15 +52,13 @@ impl Operation for Sync {
     }
 
     for package in packages  {
-      if let Err(err) = exec_cmd(format!("{command} -- {package_prefix}{package}"), false) {
-        return Err(err);
-      }
+      execute_command(format!("{command} -- {package_prefix}{package}"), false)?;
     }
 
     if cli.clean {
-      return Clean::operate(&cli);
+      Clean::operate(&cli)?;
     }
 
-    return Ok(());
+    Ok(())
   }
 }

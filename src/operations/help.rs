@@ -9,9 +9,9 @@ impl Operation for Help {
     println!("operations:");
     Operations::print_help();
     println!("");
-    println!("options without operations:");
+    println!("options without operation:");
     println!("  {}", Options::Clean);
-    println!("\nuse '{CLI_NAME} {}' with an operation for available options", Operations::Help);
+    println!("\nuse '{CLI_NAME} {}' with an operation for available options", Operations::Help.usage());
 
     Ok(())
   }

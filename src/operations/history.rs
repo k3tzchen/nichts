@@ -1,5 +1,5 @@
 use super::{Operation, Operations};
-use crate::{Cli, command::exec_cmd, error::Error, options::{Options, clean::Clean}};
+use crate::{Cli, command::execute_command, error::Error, options::{Options, clean::Clean}};
 
 pub struct History;
 
@@ -15,21 +15,27 @@ impl Operation for History {
         return Err(Error::NotSpecified { kind: "generation".to_string() });
       }
 
-      return exec_cmd("nix profile history", false);
+      return execute_command("nix profile history", false);
     }
 
     if let Some(rollback) = cli.packages.get(0) {
-      if let Err(err) = exec_cmd(format!("nix profile rollback --to {rollback}"), false) {
-        return Err(err);
-      }
+      let profile = cli.profile.clone().map(|profile| {
+        if !profile.is_empty() {
+          return format!("--profile {profile}");
+        }
+
+        return profile;
+      }).unwrap_or_else(|| "".to_string());
+
+      execute_command(format!("nix profile rollback {profile} --to {rollback}"), false)?;
 
       if cli.clean {
-        return Clean::operate(&cli);
+        Clean::operate(&cli)?;
       }
 
       return Ok(());
     }
 
-    return Err(Error::FailedRollback);
+    Err(Error::FailedRollback)
   }
 }

@@ -15,7 +15,7 @@ impl Display for Error {
       Error::Unknown { code: _, message } => write!(f, "{message}"),
       Error::FailedRollback => write!(f, "failed to rollback versions"),
       Error::NoPackageFound => write!(f, "no package(s) found"),
-      Error::NotSpecified { kind } => write!(f, "no {kind} specified"),
+      Error::NotSpecified { kind } => write!(f, "no {kind} specified (use -h for help)"),
       _ => write!(f, "")
     }
   }

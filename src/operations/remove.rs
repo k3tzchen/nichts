@@ -1,5 +1,5 @@
 use super::{Operation, Operations};
-use crate::{ command::exec_cmd, error::Error, options::{Options, clean::Clean} };
+use crate::{ command::execute_command, error::Error, options::{Options, clean::Clean} };
 
 pub struct Remove;
 
@@ -22,14 +22,20 @@ impl Operation for Remove {
       "--verbose"
     };
 
-    if let Err(err) = exec_cmd(format!("nix profile remove {log_level} -- {}", packages.join(" ")), false) {
-      return Err(err);
-    }
+    let profile = cli.profile.clone().map(|profile| {
+      if !profile.is_empty() {
+        return format!("--profile {profile}");
+      }
+
+      return profile;
+    }).unwrap_or_else(|| "".to_string());
+
+    execute_command(format!("nix profile remove {profile} {log_level} -- {}", packages.join(" ")), false)?;
 
     if cli.clean {
-      return Clean::operate(&cli);
+      Clean::operate(&cli)?;
     }
 
-    return Ok(());
+    Ok(())
   }
 }

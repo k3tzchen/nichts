@@ -51,6 +51,9 @@ struct Cli {
   #[arg(long = Options::Flake.long(), default_value = None)]
   flake: Option<String>,
 
+  #[arg(long = Options::Profile.long(), default_value = None)]
+  profile: Option<String>,
+
   #[arg(short = Options::Search.short(), long = Options::Search.long(), action = clap::ArgAction::SetTrue)]
   search: bool,
 
@@ -82,21 +85,21 @@ fn main() {
 
   if command_count == 0 {
     if cli.help {
-      Operations::assert(Help::operate(&cli));
+      Operations::throw_if_needed(Help::operate(&cli));
     }
 
     if cli.clean {
-      Operations::assert(Clean::operate(&cli));
+      Operations::throw_if_needed(Clean::operate(&cli));
     }
 
-    Operations::assert(Err(Error::NotSpecified { kind: "operation".to_string() }));
+    Operations::throw_if_needed(Err(Error::NotSpecified { kind: "operation".to_string() }));
   }
 
   if command_count > 1 {
-    Operations::assert(Err(Error::Unknown { code: 1, message: "only one operation may be used at a time".to_string() }));
+    Operations::throw_if_needed(Err(Error::Unknown { code: 1, message: "only one operation may be used at a time".to_string() }));
   }
 
-  Operations::assert(match () {
+  Operations::throw_if_needed(match () {
     _ if cli.sync => Sync::operate(&cli),
     _ if cli.query => Query::operate(&cli),
     _ if cli.version => Version::operate(&cli),

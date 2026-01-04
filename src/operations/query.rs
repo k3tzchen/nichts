@@ -1,4 +1,4 @@
-use crate::{ Operation, command::{exec_cmd, prepare_cmd}, error::Error, operations::Operations, options::Options };
+use crate::{ Operation, command::{catch_output, execute_command}, error::Error, operations::Operations, options::Options };
 use fast_strip_ansi::strip_ansi_string;
 
 pub fn pattern_match(values: &mut Vec<String>, patterns: &Vec<String>) {
@@ -27,17 +27,18 @@ pub fn pattern_match(values: &mut Vec<String>, patterns: &Vec<String>) {
   });
 }
 
-pub fn list_packages(with_info: bool) -> Vec<String> {
-  let list = prepare_cmd(vec!["nix", "profile", "list"], true)
-    .output()
-    .expect("Failed to list packages");
+pub fn list_packages(with_info: bool, profile: String) -> Vec<String> {
+  let list_output = catch_output(format!("nix profile list {profile}"), true);
+  if let Err(_) = list_output {
+    return vec![];
+  }
 
-  let output = String::from_utf8_lossy(&list.stdout).to_string();
+  let list = list_output.unwrap();
 
   let mut packages = Vec::new();
   let mut package = String::new();
 
-  for line in output.lines() {
+  for line in list.lines() {
     if with_info {
       if line.is_empty() {
         packages.push(package.clone());
@@ -72,13 +73,21 @@ impl Operation for Query {
       return Ok(());
     }
 
+    let profile = cli.profile.clone().map(|profile| {
+      if !profile.is_empty() {
+        return format!("--profile {profile}");
+      }
+
+      return profile;
+    }).unwrap_or_else(|| "".to_string());
+
     if cli.info {
       if !cli.search || cli.packages.is_empty() {
-        return exec_cmd("nix profile list", false);
+        return execute_command(format!("nix profile list {profile}"), false);
       }
     }
 
-    let mut packages = list_packages(cli.info);
+    let mut packages = list_packages(cli.info, profile);
 
     if cli.search {
       if cli.packages.is_empty() {
@@ -94,6 +103,6 @@ impl Operation for Query {
 
     println!("{}", packages.join("\n"));
 
-    return Ok(());
+    Ok(())
   }
 }

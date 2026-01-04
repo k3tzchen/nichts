@@ -1,10 +1,10 @@
-use crate::{Operation, command::exec_cmd, error::Error, operations::query::list_packages, options::clean::Clean};
+use crate::{Operation, command::execute_command, error::Error, options::clean::Clean};
 
 pub struct Upgrade;
 
 impl Operation for Upgrade {
   fn operate(cli: &crate::Cli) -> Result<(), Error> {
-    let mut packages = cli.packages.join(" ");
+    let packages = cli.packages.join(" ");
 
     let log_level = if cli.quiet {
       "--quiet"
@@ -12,7 +12,15 @@ impl Operation for Upgrade {
       "--verbose"
     };
 
-    let mut command = format!("nix profile upgrade {log_level}");
+    let profile = cli.profile.clone().map(|profile| {
+      if !profile.is_empty() {
+        return format!("--profile {profile}");
+      }
+
+      return profile;
+    }).unwrap_or_else(|| "".to_string());
+
+    let mut command = format!("nix profile upgrade {profile} {log_level}");
 
     if cli.impure {
       command.push_str(" --impure");
@@ -23,21 +31,15 @@ impl Operation for Upgrade {
     }
 
     if packages.is_empty() {
-      let installed_packages = list_packages(false);
-      if installed_packages.is_empty() {
-        return Err(Error::NoPackageFound);
-      }
-      packages = installed_packages.join(" ");
+      return execute_command(format!("{command} --all"), false);
     }
 
-    if let Err(err) = exec_cmd(format!("{command} -- {packages}"), false) {
-      return Err(err);
-    }
+    execute_command(format!("{command} -- {packages}"), false)?;
 
     if cli.clean {
-      return Clean::operate(&cli);
+      Clean::operate(&cli)?;
     }
 
-    return Ok(());
+    Ok(())
   }
 }

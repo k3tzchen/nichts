@@ -1,4 +1,4 @@
-use crate::{Cli, Operation, command::exec_cmd, error::Error};
+use crate::{Cli, Operation, command::execute_command, error::Error};
 
 pub struct Search;
 
@@ -11,6 +11,6 @@ impl Operation for Search {
       "nixpkgs".to_string()
     };
 
-    return exec_cmd(format!("nix search {flake} -- {}", &cli.packages.join(" ")), false);
+    execute_command(format!("nix search {flake} -- {query}", query = &cli.packages.join(" ")), false)
   }
 }
