@@ -21,7 +21,6 @@ fn parse_args(command: impl Into<String>) -> Result<Vec<String>, Error> {
     return Err(Error::Unknown { code: 1, message: "Command was empty".to_string() });
   }
 
-  println!("{args:?}");
   Ok(args)
 }
 
