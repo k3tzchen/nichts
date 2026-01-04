@@ -18,6 +18,7 @@ mod operations;
 mod options;
 mod command;
 mod error;
+mod package;
 
 pub static CLI_NAME: &str = env!("CARGO_BIN_NAME");
 pub static CLI_VERSION: &str = env!("CARGO_PKG_VERSION");

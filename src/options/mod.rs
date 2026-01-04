@@ -31,9 +31,9 @@ impl Options {
 
   fn partial(operation: &Operations) -> &'static [Options] {
     match operation {
-      Operations::Query => &[Options::Profile, Options::Info, Options::Search],
-      Operations::Remove | Operations::History => &[Options::Profile, Options::Clean, Options::Quiet],
-      Operations::Sync => &[Options::Profile, Options::Clean, Options::Flake, Options::Impure, Options::Quiet, Options::Refresh, Options::Search, Options::Upgrade],
+      Operations::Query => &[Options::Info, Options::Profile, Options::Search],
+      Operations::Remove | Operations::History => &[Options::Clean, Options::Profile, Options::Quiet],
+      Operations::Sync => &[Options::Clean, Options::Flake, Options::Impure, Options::Profile, Options::Quiet, Options::Refresh, Options::Search, Options::Upgrade],
       _ => &[]
     }
   }

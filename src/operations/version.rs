@@ -10,7 +10,6 @@ impl Operation for Version {
     }
 
     let output = catch_output("nix --version", true)?;
-
     print!("{CLI_NAME} {CLI_VERSION} - {output}");
 
     Ok(())

@@ -9,7 +9,7 @@ impl Operation for Sync {
       return Ok(());
     }
 
-    let packages = &cli.packages;
+    let mut packages = cli.packages.clone();
 
     if cli.update {
       return Upgrade::operate(&cli);
@@ -23,12 +23,6 @@ impl Operation for Sync {
       return Search::operate(&cli);
     }
 
-    let log_level = if cli.quiet {
-      "--quiet"
-    } else {
-      "--verbose"
-    };
-
     let profile = cli.profile.clone().map(|profile| {
       if !profile.is_empty() {
         return format!("--profile {profile}");
@@ -37,11 +31,27 @@ impl Operation for Sync {
       return profile;
     }).unwrap_or_else(|| "".to_string());
 
-    let mut command = format!("nix profile add {profile} {log_level}");
+    let package_prefix = if cli.flake.is_some() {
+      format!("{}#", cli.flake.clone().unwrap())
+    } else {
+      "nixpkgs#".to_string()
+    };
 
-    let package_prefix =
-      if cli.flake.is_some() { format!("{}#", cli.flake.clone().unwrap()) }
-      else { "nixpkgs#".to_string() };
+    if packages.is_empty() {
+      if !package_prefix.eq("nixpkgs#") {
+        packages.push("default".to_string());
+      } else {
+        return Err(Error::NotSpecified { kind: "target(s)".to_string() });
+      }
+    }
+
+    let log_level = if cli.quiet {
+      "--quiet"
+    } else {
+      "--verbose"
+    };
+
+    let mut command = format!("nix profile add {profile} {log_level}");
 
     if cli.impure {
       command.push_str(" --impure");
