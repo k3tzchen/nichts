@@ -11,7 +11,8 @@ pub enum Options {
   Profile,
   Refresh,
   Clean,
-  Quiet
+  Quiet,
+  Wipe
 }
 
 impl Options {
@@ -25,14 +26,16 @@ impl Options {
       Options::Profile,
       Options::Refresh,
       Options::Clean,
-      Options::Quiet
+      Options::Quiet,
+      Options::Wipe
     ]
   }
 
   fn partial(operation: &Operations) -> &'static [Options] {
     match operation {
       Operations::Query => &[Options::Info, Options::Profile, Options::Search],
-      Operations::Remove | Operations::History => &[Options::Clean, Options::Profile, Options::Quiet],
+      Operations::Remove => &[Options::Clean, Options::Profile, Options::Quiet],
+      Operations::History => &[Options::Clean, Options::Profile, Options::Quiet, Options::Wipe],
       Operations::Sync => &[Options::Clean, Options::Flake, Options::Impure, Options::Profile, Options::Quiet, Options::Refresh, Options::Search, Options::Upgrade],
       _ => &[]
     }
@@ -75,6 +78,7 @@ impl Options {
       Options::Clean => "clean",
       Options::Quiet => "quiet",
       Options::Profile => "profile",
+      Options::Wipe => "wipe",
     }
   }
 
@@ -82,6 +86,7 @@ impl Options {
     match self {
       Options::Flake => "<path>",
       Options::Search => "<pattern(s)>",
+      Options::Wipe => "[age]",
       _ => ""
     }
   }
@@ -96,7 +101,8 @@ impl Options {
       Options::Quiet => "decrease the logging output",
       Options::Refresh => "consider all previously downloaded files out-of-date",
       Options::Search => "search for packages matching patterns",
-      Options::Upgrade => "upgrade all installed packages"
+      Options::Upgrade => "upgrade all installed packages",
+      Options::Wipe => "delete non-current versions older than the specified age"
     }
   }
 

@@ -55,6 +55,9 @@ struct Cli {
   #[arg(long = Options::Profile.long(), default_value = None)]
   profile: Option<String>,
 
+  #[arg(long = Options::Wipe.long(), num_args = 0..=1, default_missing_value = Some("0d"))]
+  wipe: Option<String>,
+
   #[arg(short = Options::Search.short(), long = Options::Search.long(), action = clap::ArgAction::SetTrue)]
   search: bool,
 

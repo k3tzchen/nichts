@@ -55,7 +55,7 @@ impl Operations {
     match self {
       Operations::Sync | Operations::Query => "[options] <package(s)>",
       Operations::Remove => "<package(s)>",
-      Operations::History => "[options] <rollback generation>",
+      Operations::History => "[options] [rollback generation]",
       _ => ""
     }
   }
