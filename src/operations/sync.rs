@@ -98,7 +98,7 @@ impl Operation for Sync {
     println!("Packages ({length}) {new_packages_list}\n", length = new_packages.len(), new_packages_list = new_packages.join(" "));
 
     if !cli.noconfirm && !confirm("Proceed with installation?") {
-      return Err(Error::Unknown { code: 1, message: "".to_string() });
+      return Err(Error::Unknown { code: 1, message: String::new() });
     }
 
     let command = cli.prepare_command("nix profile add");

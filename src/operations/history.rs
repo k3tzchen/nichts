@@ -9,7 +9,7 @@ impl Operation for History {
 
     if cli.wipe.is_some() {
       if !cli.noconfirm && !confirm("Do you want to wipe your history?") {
-        return Err(Error::Unknown { code: 1, message: "".to_string() });
+        return Err(Error::Unknown { code: 1, message: String::new() });
       }
 
       let wipe_time = cli.wipe.clone().unwrap();
@@ -71,7 +71,7 @@ impl Operation for History {
 
       if cli.rollback {
         if !cli.noconfirm && !confirm("Do you want to rollback?") {
-          return Err(Error::Unknown { code: 1, message: "".to_string() });
+          return Err(Error::Unknown { code: 1, message: String::new() });
         }
 
         let command = cli.prepare_command("nix profile rollback");

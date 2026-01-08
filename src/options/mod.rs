@@ -68,8 +68,8 @@ impl Options {
 
   pub fn validate_options(cli: &Cli, operation: Operations) -> Result<(), Error> {
     if cli.help {
-      Options::print_help(Operations::Query);
-      return Ok(());
+      Options::print_help(operation);
+      return Err(Error::Unknown { code: 0, message: String::new() });
     }
 
     let set = &[
@@ -110,7 +110,6 @@ impl Options {
         }
       }
     }
-
 
     Ok(())
   }

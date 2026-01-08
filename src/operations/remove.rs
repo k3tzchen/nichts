@@ -21,7 +21,7 @@ impl Operation for Remove {
       for package in not_installed_packages {
         Operations::show_warning(format!("target not found: {package}"));
       }
-      return Err(Error::Unknown { code: 1, message: "".to_string() });
+      return Err(Error::Unknown { code: 1, message: String::new() });
     }
 
     let flake = cli.flake_url();
@@ -54,7 +54,7 @@ impl Operation for Remove {
     println!("Packages ({length}) {new_packages_list}\n", length = new_packages.len(), new_packages_list = new_packages.join(" "));
 
     if !cli.noconfirm && !confirm("Do you want to remove these packages?") {
-      return Err(Error::Unknown { code: 1, message: "".to_string() });
+      return Err(Error::Unknown { code: 1, message: String::new() });
     }
 
     let command = cli.prepare_command("nix profile remove");

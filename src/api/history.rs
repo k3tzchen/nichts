@@ -154,7 +154,7 @@ impl HistoryVersions {
       }
 
       return profile;
-    }).unwrap_or_else(|| "".to_string());
+    }).unwrap_or_else(|| String::new());
 
     let history_output = catch_output(format!("nix profile history {profile}"), true);
     if let Err(err) = history_output {
