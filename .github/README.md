@@ -2,6 +2,7 @@
 
 <div align="center">
   <a href="https://choosealicense.com/licenses/mit/">License</a>
+  <a href="https://github.com/k3tzchen/nichts/issues/new?template=bug.yml">Report a bug</a>
 </div>
 <br />
 <div align="center">

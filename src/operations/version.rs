@@ -4,10 +4,7 @@ pub struct Version;
 
 impl Operation for Version {
   fn operate(cli: &crate::Cli) -> Result<(), Error> {
-    if cli.help {
-      Options::print_help(Operations::Version);
-      return Ok(());
-    }
+    Options::validate_options(&cli, Operations::Version)?;
 
     let output = catch_output("nix --version", true)?;
     print!("{CLI_NAME} {CLI_VERSION} - {output}");

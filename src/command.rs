@@ -1,4 +1,5 @@
 use std::process::{ Command, Stdio };
+use std::io::{Write, stdin, stdout};
 
 use crate::error::Error;
 
@@ -69,4 +70,15 @@ pub fn catch_output(command: impl Into<String>, no_color: bool) -> Result<String
   }
 
   Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+pub fn confirm(message: impl Into<String>) -> bool {
+  let message = message.into();
+  print!("{message} [Y/n] ");
+  stdout().flush().unwrap();
+
+  let mut input = String::new();
+  stdin().read_line(&mut input).unwrap();
+
+  input.trim().to_lowercase() == "y"
 }

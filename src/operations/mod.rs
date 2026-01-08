@@ -55,8 +55,15 @@ impl Operations {
     match self {
       Operations::Sync | Operations::Query => "[options] <package(s)>",
       Operations::Remove => "<package(s)>",
-      Operations::History => "[options] [rollback generation]",
+      Operations::History => "[options] [generation]",
       _ => ""
+    }
+  }
+
+  pub fn show_warning(message: impl Into<String>) -> () {
+    let message = message.into();
+    if !message.is_empty() {
+      eprintln!("warning: {message}");
     }
   }
 

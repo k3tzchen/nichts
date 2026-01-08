@@ -18,9 +18,17 @@
 
         packages.default = pkgs.rustPlatform.buildRustPackage {
           pname = "nichts";
-          version = "0.2.35";
+          version = "0.2.39";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
+
+          meta = {
+            description = "nichts is a nix profile wrapper with pacman-like syntax";
+            homepage = "https://github.com/k3tzchen/nichts";
+            license = pkgs.lib.licenses.mit;
+            maintainers = with pkgs.lib.maintainers; [ ];
+            mainProgram = "nichts";
+          };
         };
       }
     );

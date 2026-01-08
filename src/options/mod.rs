@@ -1,44 +1,118 @@
-use std::fmt::Display;
+use std::{fmt::Display};
 
-use crate::{CLI_NAME, operations::Operations};
+use crate::{CLI_NAME, Cli, error::Error, operations::Operations};
 
+#[derive(Clone, PartialEq, PartialOrd, Eq, Debug)]
 pub enum Options {
-  Upgrade,
-  Flake,
-  Search,
-  Info,
-  Impure,
-  Profile,
-  Refresh,
   Clean,
+  Flake,
+  Impure,
+  Info,
+  Json,
+  NoConfirm,
+  Profile,
   Quiet,
-  Wipe
+  Refresh,
+  Rollback,
+  Search,
+  Upgrade,
+  Wipe,
+}
+
+impl Ord for Options {
+  fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    self.to_string().cmp(&other.to_string())
+  }
 }
 
 impl Options {
   fn all() -> &'static [Options] {
     &[
-      Options::Upgrade,
-      Options::Flake,
-      Options::Search,
-      Options::Info,
-      Options::Impure,
-      Options::Profile,
-      Options::Refresh,
       Options::Clean,
+      Options::Flake,
+      Options::Impure,
+      Options::Info,
+      Options::Json,
+      Options::NoConfirm,
+      Options::Profile,
       Options::Quiet,
-      Options::Wipe
+      Options::Refresh,
+      Options::Rollback,
+      Options::Search,
+      Options::Upgrade,
+      Options::Wipe,
     ]
   }
 
   fn partial(operation: &Operations) -> &'static [Options] {
     match operation {
-      Operations::Query => &[Options::Info, Options::Profile, Options::Search],
-      Operations::Remove => &[Options::Clean, Options::Profile, Options::Quiet],
-      Operations::History => &[Options::Clean, Options::Profile, Options::Quiet, Options::Wipe],
-      Operations::Sync => &[Options::Clean, Options::Flake, Options::Impure, Options::Profile, Options::Quiet, Options::Refresh, Options::Search, Options::Upgrade],
+      Operations::Query => &[Options::Info, Options::Flake, Options::Json, Options::Profile, Options::Quiet, Options::Search],
+      Operations::Remove => &[Options::Clean, Options::Flake, Options::NoConfirm, Options::Profile, Options::Quiet],
+      Operations::History => &[Options::Clean, Options::Json, Options::NoConfirm, Options::Profile, Options::Quiet, Options::Rollback, Options::Wipe],
+      Operations::Sync => &[Options::Clean, Options::Flake, Options::Impure, Options::Json, Options::NoConfirm, Options::Profile, Options::Quiet, Options::Refresh, Options::Search, Options::Upgrade],
       _ => &[]
     }
+  }
+
+  fn get_conflicts(operation: &Operations) -> &'static [(Options, &'static [Options])] {
+    match operation {
+      Operations::History => &[
+        (Options::Json, &[Options::Wipe, Options::Rollback, Options::Clean]),
+      ],
+      Operations::Query => &[
+        (Options::Json, &[Options::Info, Options::Quiet])
+      ],
+      _ => &[]
+    }
+  }
+
+  pub fn validate_options(cli: &Cli, operation: Operations) -> Result<(), Error> {
+    if cli.help {
+      Options::print_help(Operations::Query);
+      return Ok(());
+    }
+
+    let set = &[
+      (Options::Clean, cli.clean),
+      (Options::Flake, cli.flake.is_some()),
+      (Options::Impure, cli.impure),
+      (Options::Info, cli.info),
+      (Options::Json, cli.json),
+      (Options::NoConfirm, cli.noconfirm),
+      (Options::Profile, cli.profile.is_some()),
+      (Options::Quiet, cli.quiet),
+      (Options::Refresh, cli.refresh),
+      (Options::Rollback, cli.rollback),
+      (Options::Search, cli.search),
+      (Options::Upgrade, cli.upgrade),
+      (Options::Wipe, cli.wipe.is_some()),
+    ];
+
+    let allowed_options = Options::partial(&operation).to_vec();
+    let confilcts = Options::get_conflicts(&operation);
+
+    for (option, is_set) in set {
+      if *is_set {
+        if !allowed_options.contains(&option) {
+          return Err(Error::InvalidOption {
+            option: format!("--{}", option.long()),
+            conflicts_with: None
+          });
+        }
+
+        if let Some((_, conflicts_with)) = confilcts.iter().find(|(opt, _)| opt == option) {
+          if let Some(conflict) = conflicts_with.iter().find(|c| set.iter().any(|(opt, is_set_val)| &opt == c && *is_set_val)) {
+            return Err(Error::InvalidOption {
+              option: format!("--{}", option.long()),
+              conflicts_with: Some(conflict.long().to_string())
+            });
+          }
+        }
+      }
+    }
+
+
+    Ok(())
   }
 
   pub fn print_help(operation: Operations) {
@@ -74,19 +148,23 @@ impl Options {
       Options::Search => "search",
       Options::Info => "info",
       Options::Impure => "impure",
+      Options::Json => "json",
       Options::Refresh => "refresh",
       Options::Clean => "clean",
       Options::Quiet => "quiet",
       Options::Profile => "profile",
       Options::Wipe => "wipe",
+      Options::NoConfirm => "noconfirm",
+      Options::Rollback => "rollback",
     }
   }
 
   pub fn arguments(&self) -> &str {
     match self {
       Options::Flake => "<path>",
+      Options::Profile => "<path>",
       Options::Search => "<pattern(s)>",
-      Options::Wipe => "[age]",
+      Options::Wipe => "[age:<N>d]",
       _ => ""
     }
   }
@@ -94,15 +172,18 @@ impl Options {
   fn description(&self) -> &str {
     match self {
       Options::Clean => "delete unreachable store objects",
-      Options::Flake => "specify the flake to install packages from",
+      Options::Flake => "specify a new default flake to install packages from",
       Options::Impure => "allow access to mutable paths and repositories",
       Options::Info => "display useful metadata",
+      Options::Json => "produces output in JSON format",
+      Options::NoConfirm => "do not ask for any confirmation",
       Options::Profile => "the profile to operate on",
       Options::Quiet => "decrease the logging output",
       Options::Refresh => "consider all previously downloaded files out-of-date",
+      Options::Rollback => "roll back to another version",
       Options::Search => "search for packages matching patterns",
       Options::Upgrade => "upgrade all installed packages",
-      Options::Wipe => "delete non-current versions older than the specified age"
+      Options::Wipe => "delete non-current versions older than the specified age",
     }
   }
 
