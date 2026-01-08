@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Cli, command::catch_output, error::Error, operations::Operations};
 
-fn verion_default() -> String {
+fn version_default() -> String {
   "latest".to_string()
 }
 
@@ -23,7 +23,7 @@ pub struct Package {
 
   pub homepage: Option<String>,
   pub installed_size: Option<u64>,
-  #[serde(default = "verion_default")]
+  #[serde(default = "version_default")]
   pub version: String,
 }
 
